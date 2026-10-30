@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #f3f6f5;
+  --card: #ffffff;
+  --ink: #12211e;
+  --muted: #3f564f;
+  --line: #e1ebe7;
+  --brand: #0f766e;
+  --brand-ink: #f4fffc;
+  --soft: #e7f5f2;
+  --shadow: 0 10px 30px rgba(18, 33, 30, 0.06);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0c1412;
+  --card: #16211e;
+  --ink: #eef6f3;
+  --muted: #a9bdb7;
+  --line: #2a3b36;
+  --brand: #2dd4bf;
+  --brand-ink: #042f2c;
+  --soft: #12332e;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-soft: var(--soft);
+  --font-sans: var(--font-inter), var(--font-hind), "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { min-height: 100%; }
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(900px 420px at 110% -10%, color-mix(in srgb, var(--brand) 18%, transparent), transparent 55%),
+    radial-gradient(700px 360px at -10% 0%, color-mix(in srgb, var(--brand) 10%, transparent), transparent 50%);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 28%, white);
+}
+
+button, input, select, textarea { font: inherit; }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="switch"]:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
