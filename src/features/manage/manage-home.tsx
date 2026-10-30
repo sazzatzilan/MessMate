@@ -9,7 +9,7 @@ const CARDS = [
   { href: "/manage/schedule", title: "Schedule and rates", body: "Cut-off, days off, and prices.", icon: CalendarClock },
   { href: "/manage/requests", title: "Requests", body: "Meal changes waiting for you.", icon: ClipboardList, countKey: "requests" },
   { href: "/manage/finance", title: "Finance approvals", body: "Deposits and corrected amounts.", icon: Receipt, countKey: "money" },
-  { href: "/manage/members", title: "Members", body: "Add people, reset passwords, deactivate, or delete.", icon: Users },
+  { href: "/manage/members", title: "Members", body: "Add people, transfer the manager role, reset passwords, deactivate, or delete.", icon: Users },
   { href: "/manage/cleanup", title: "Month cleanup", body: "Close an old month after a backup.", icon: Trash2 },
 ] as const;
 

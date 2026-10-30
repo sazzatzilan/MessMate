@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button, Confirm, Empty, Field, MemberLink, PhotoField, Sheet, StatusChip } from "@/components/ui/kit";
 import { useProto, type MemberInput } from "@/mess/store";
 import { makePassword, strength, type Member, type Role } from "@/mess/model";
 
 export default function MembersPage() {
   const store = useProto();
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
   const [edit, setEdit] = useState<Member | null>(null);
@@ -15,6 +17,7 @@ export default function MembersPage() {
   const [confirmOff, setConfirmOff] = useState<Member | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Member | null>(null);
   const [confirmReset, setConfirmReset] = useState<Member | null>(null);
+  const [confirmTransfer, setConfirmTransfer] = useState<Member | null>(null);
   if (store.me?.role !== "MANAGER") return null;
   const rows = store.state.members.filter((member) => `${member.name} ${member.username} ${member.room}`.toLowerCase().includes(query.trim().toLowerCase()));
 
@@ -39,6 +42,9 @@ export default function MembersPage() {
               </div>
               {member.deleted ? <p className="mt-2 text-sm text-muted">This login is closed. Meals and money stay in the books.</p> : <div className="mt-2 flex flex-wrap gap-2">
                 <Button kind="ghost" onClick={() => setEdit(member)}>Edit</Button>
+                {member.id !== store.me?.id && member.active && member.role !== "MANAGER" ? (
+                  <Button kind="soft" onClick={() => setConfirmTransfer(member)}>Transfer manager role</Button>
+                ) : null}
                 <Button kind="ghost" onClick={() => setConfirmReset(member)}>Reset password</Button>
                 <Button kind={member.active ? "danger" : "soft"} onClick={() => member.active ? setConfirmOff(member) : store.setActive(member.id, true)}>{member.active ? "Deactivate" : "Activate"}</Button>
                 {member.id === store.me?.id ? null : <Button kind="danger" onClick={() => setConfirmDelete(member)}>Delete</Button>}
@@ -68,6 +74,19 @@ export default function MembersPage() {
           onConfirm={() => {
             setCredentials({ name: confirmReset.name, username: confirmReset.username, password: store.resetPassword(confirmReset.id) });
             setConfirmReset(null);
+          }}
+        />
+      ) : null}
+      {confirmTransfer ? (
+        <Confirm
+          title={`Transfer the manager role to ${confirmTransfer.name}?`}
+          body={`You become a member. ${confirmTransfer.name} becomes the manager and can change meals, money, and members.`}
+          confirmLabel="Transfer role"
+          onCancel={() => setConfirmTransfer(null)}
+          onConfirm={() => {
+            const moved = store.transferRole(confirmTransfer.id);
+            setConfirmTransfer(null);
+            if (moved) router.replace("/");
           }}
         />
       ) : null}

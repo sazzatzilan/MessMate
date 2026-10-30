@@ -14,11 +14,9 @@ The day-to-day copy stays in the browser on that phone. The same opening books f
 
 | Who | Username | Password |
 | --- | --- | --- |
-| Manager, Nabil Rahman | nabil | Nabil123! |
-| Rafi Ahmed | rafi | Rafi123! |
-| Tanvir Islam | tanvir | Tanvir123! |
-| Sakib Hossain | sakib | Sakib123! |
-| Hasan Ali | hasan | Hasan123! |
+| Manager, Sifat | sifat | Shifat@101 |
+| Nahid | nahid | Nahid123! |
+| Nihal | nihal | Nihal123! |
 
 ## Install it on an Android phone
 

@@ -108,6 +108,8 @@ export type MonthSnapshot = {
 };
 
 export type AppState = {
+  /** Bumps when the opening books change, so an old save on this phone is dropped. */
+  booksVersion: number;
   theme: "light" | "dark";
   userId: string | null;
   month: string;
@@ -373,42 +375,56 @@ export function makePassword() {
   return `${words[Math.floor(Math.random() * words.length)]}${Math.floor(1000 + Math.random() * 9000)}!`;
 }
 
+/** Opening books for Green Hostel. A saved phone copy is kept only when it carries this number. */
+export const BOOKS_VERSION = 2;
+
+/**
+ * The signed-in manager hands their own role to another active member.
+ * Both roles change in one step, so the mess still has a manager when this
+ * person was the last one. Adding a second manager, without stepping down,
+ * stays on the member form.
+ */
+export function transferManagerRole(members: Member[], actorId: string, targetId: string): { ok: true; members: Member[] } | { ok: false; reason: string } {
+  const actor = members.find((member) => member.id === actorId);
+  const target = members.find((member) => member.id === targetId);
+  if (!actor || actor.role !== "MANAGER" || !actor.active || actor.deleted) {
+    return { ok: false, reason: "Only an active manager can transfer the role." };
+  }
+  if (!target || target.id === actor.id) {
+    return { ok: false, reason: "Choose another member." };
+  }
+  if (target.deleted || !target.active) {
+    return { ok: false, reason: "Choose an active member." };
+  }
+  if (target.role === "MANAGER") {
+    return { ok: false, reason: "They are already a manager." };
+  }
+  return {
+    ok: true,
+    members: members.map((member) => {
+      if (member.id === actor.id) return { ...member, role: "MEMBER" };
+      if (member.id === target.id) return { ...member, role: "MANAGER" };
+      return member;
+    }),
+  };
+}
+
 export function createSeed(now = new Date()): AppState {
   const today = dateKey(now);
-  const yesterday = addDays(today, -1);
-  const tomorrow = addDays(today, 1);
-  const afterCutoff = now.getHours() * 60 + now.getMinutes() >= 13 * 60;
-  const ago = (days: number, hours: number) => {
-    const date = new Date(now);
-    date.setDate(date.getDate() - days);
-    date.setHours(date.getHours() - hours, date.getMinutes(), 0, 0);
-    return date.toISOString();
-  };
   const members: Member[] = [
-    { id: "nabil", name: "Nabil Rahman", username: "nabil", password: "Nabil123!", room: "101", phone: "01711000001", role: "MANAGER", active: true, color: "#0F766E", joinedOn: `${monthKey(today)}-01` },
-    { id: "rafi", name: "Rafi Ahmed", username: "rafi", password: "Rafi123!", room: "204", phone: "01711000002", role: "MEMBER", active: true, color: "#0E7490", joinedOn: `${monthKey(today)}-01` },
-    { id: "tanvir", name: "Tanvir Islam", username: "tanvir", password: "Tanvir123!", room: "207", phone: "01711000003", role: "MEMBER", active: true, color: "#7C3AED", joinedOn: `${monthKey(today)}-01` },
-    { id: "sakib", name: "Sakib Hossain", username: "sakib", password: "Sakib123!", room: "210", phone: "01711000004", role: "MEMBER", active: true, color: "#B45309", joinedOn: `${monthKey(today)}-01` },
-    { id: "hasan", name: "Hasan Ali", username: "hasan", password: "Hasan123!", room: "215", phone: "01711000005", role: "MEMBER", active: true, color: "#BE123C", joinedOn: `${monthKey(today)}-01` },
+    { id: "sifat", name: "Sifat", username: "sifat", password: "Shifat@101", room: "", phone: "", role: "MANAGER", active: true, color: "#0F766E", joinedOn: today },
+    { id: "nahid", name: "Nahid", username: "nahid", password: "Nahid123!", room: "", phone: "", role: "MEMBER", active: true, color: "#0E7490", joinedOn: today },
+    { id: "nihal", name: "Nihal", username: "nihal", password: "Nihal123!", room: "", phone: "", role: "MEMBER", active: true, color: "#7C3AED", joinedOn: today },
   ];
   return {
+    booksVersion: BOOKS_VERSION,
     theme: "light",
     userId: null,
     month: monthKey(today),
     members,
-    offs: [
-      { userId: "rafi", date: today, meal: "LUNCH" },
-      { userId: "hasan", date: yesterday, meal: "BREAKFAST" },
-    ],
-    guests: [
-      { id: "g1", hostId: "tanvir", date: tomorrow, meal: "LUNCH", guestName: "Imran", quantity: 1, note: "Friend from class" },
-      { id: "g2", hostId: "sakib", date: today, meal: "LUNCH", guestName: "Shuvo", quantity: 2, note: "" },
-      { id: "g3", hostId: "hasan", date: yesterday, meal: "DINNER", guestName: "Arif", quantity: 1, note: "Cousin" },
-      { id: "g4", hostId: "nabil", date: addDays(today, -3), meal: "BREAKFAST", guestName: "Imran", quantity: 1, note: "" },
-      { id: "g5", hostId: "rafi", date: addDays(today, -6), meal: "LUNCH", guestName: "Shuvo", quantity: 1, note: "" },
-      { id: "g6", hostId: "tanvir", date: addDays(today, -2), meal: "LUNCH", guestName: "Arif", quantity: 1, note: "" },
-    ],
-    unserved: [{ date: today, meal: "BREAKFAST" }],
+    offs: [],
+    guests: [],
+    unserved: [],
     servedForce: [],
     weekdayOff: [{ weekday: 5, meal: "DINNER", from: "2020-01-01" }],
     cutoff: "13:00",
@@ -424,45 +440,10 @@ export function createSeed(now = new Date()): AppState {
       guest: 90,
       from: "2020-01-01",
     })),
-    money: [
-      { id: "d1", userId: "nabil", amount: 5000, date: addDays(today, -10), note: "October deposit", status: "ACCEPTED" },
-      { id: "d2", userId: "rafi", amount: 3000, date: addDays(today, -9), note: "October deposit", status: "ACCEPTED" },
-      { id: "d3", userId: "tanvir", amount: 1200, date: addDays(today, -1), note: "bKash transfer", status: "PENDING", edited: true, fileName: "bkash.png" },
-      { id: "d4", userId: "sakib", amount: 2000, date: today, note: "Cash to manager", status: "PENDING", fileName: "cash.jpg" },
-      { id: "d5", userId: "hasan", amount: 1000, date: addDays(today, -2), note: "Market run", status: "RECALC", recalculatedAmount: 700, managerNote: "The receipt shows ৳700, not ৳1,000.", fileName: "receipt.jpg" },
-      { id: "d6", userId: "rafi", amount: 400, date: addDays(today, -4), note: "Extra deposit", status: "REJECTED", managerNote: "This was already counted." },
-      { id: "d7", userId: "tanvir", amount: 2500, date: addDays(today, -12), note: "October deposit", status: "ACCEPTED" },
-      { id: "d8", userId: "sakib", amount: 2500, date: addDays(today, -11), note: "October deposit", status: "ACCEPTED" },
-      { id: "d9", userId: "hasan", amount: 2800, date: addDays(today, -11), note: "October deposit", status: "ACCEPTED" },
-    ],
-    requests: afterCutoff ? [
-      { id: "r1", userId: "rafi", date: today, meal: "DINNER", fromOn: true, toOn: false, reason: "Going home after class.", status: "PENDING", at: ago(0, 2) },
-      { id: "r3", userId: "tanvir", date: today, meal: "DINNER", fromOn: true, toOn: false, reason: "Out of town tonight.", status: "PENDING", at: ago(0, 5) },
-    ] : [],
-    history: [
-      { id: "h1", at: ago(0, 1), actorId: "tanvir", category: "edit", text: "Tanvir edited a deposit.", edited: { before: "৳1,500", after: "৳1,200", editorId: "tanvir", at: ago(0, 1) } },
-      { id: "h2", at: ago(0, 2), actorId: "rafi", category: "request", text: "Rafi asked to turn dinner off today." },
-      { id: "h3", at: ago(0, 5), actorId: "tanvir", category: "request", text: "Tanvir asked to turn dinner off today." },
-      { id: "h4", at: ago(1, 3), actorId: "sakib", category: "edit", text: "Sakib edited Shuvo’s lunch count.", edited: { before: "1 guest", after: "2 guests", editorId: "sakib", at: ago(1, 3) } },
-      { id: "h5", at: ago(1, 6), actorId: "hasan", category: "money", text: "Hasan sent ৳1,000 for a market run." },
-      { id: "h6", at: ago(1, 4), actorId: "nabil", category: "money", text: "Nabil sent Hasan’s market receipt back as ৳700." },
-      { id: "h7", at: ago(2, 2), actorId: "rafi", category: "meal", text: "Rafi turned lunch off." },
-      { id: "h8", at: ago(2, 5), actorId: "nabil", category: "meal", text: "Nabil turned breakfast off for the whole hostel today." },
-      { id: "h9", at: ago(4, 1), actorId: "nabil", category: "money", text: "Nabil accepted Rafi’s ৳3,000 deposit." },
-      { id: "h10", at: ago(4, 2), actorId: "nabil", category: "money", text: "Nabil rejected Rafi’s extra ৳400 deposit." },
-      { id: "h11", at: ago(6, 1), actorId: "hasan", category: "meal", text: "Hasan added guest Arif for dinner." },
-      { id: "h12", at: ago(10, 2), actorId: "nabil", category: "money", text: "Nabil recorded his own ৳5,000 deposit." },
-    ],
-    notices: [
-      ...(afterCutoff ? [
-        { id: "n1", for: "managers" as const, title: "Meal change", body: "Rafi wants dinner off today.", href: "/manage/requests", unread: true, at: ago(0, 2), requestId: "r1" },
-        { id: "n3", for: "managers" as const, title: "Meal change", body: "Tanvir wants dinner off today.", href: "/manage/requests", unread: true, at: ago(0, 5), requestId: "r3" },
-      ] : []),
-      { id: "n4", for: "managers", title: "Deposit to review", body: "Sakib sent ৳2,000.", href: "/manage/finance", unread: true, at: ago(0, 1), moneyId: "d4" },
-      { id: "n5", for: "managers", title: "Deposit to review", body: "Tanvir sent ৳1,200.", href: "/manage/finance", unread: false, at: ago(1, 1), moneyId: "d3" },
-      { id: "n6", for: "hasan", title: "Check this amount", body: "Nabil corrected your market receipt to ৳700.", href: "/finance", unread: true, at: ago(1, 4), moneyId: "d5" },
-      { id: "n7", for: "rafi", title: "Deposit rejected", body: "The extra ৳400 was already counted.", href: "/finance", unread: true, at: ago(4, 2), moneyId: "d6" },
-    ],
+    money: [],
+    requests: [],
+    history: [],
+    notices: [],
     cleanedMonths: [],
     snapshots: [],
     backupReady: false,

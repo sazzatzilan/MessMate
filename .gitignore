@@ -42,6 +42,15 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 
+# Android build output and signing key
+/android/.gradle
+/android/build
+/android/app/build
+/android/local.properties
+/android/*.keystore
+/android/keystore.txt
+*.apk
+
 # vercel
 .vercel
 

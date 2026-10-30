@@ -15,7 +15,6 @@ import {
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
-  RefreshCcw,
   Settings2,
   Sun,
   UserRound,
@@ -176,9 +175,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <button type="button" aria-pressed={store.state.theme === "dark"} className="flex min-h-11 w-full items-center gap-2 rounded-xl px-2 font-semibold" onClick={() => store.setTheme(store.state.theme === "dark" ? "light" : "dark")}>
               {store.state.theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
               {store.state.theme === "dark" ? "Light mode" : "Dark mode"}
-            </button>
-            <button type="button" className="flex min-h-11 w-full items-center gap-2 rounded-xl px-2 font-semibold" onClick={() => { store.restore(); setMenu(false); }}>
-              <RefreshCcw size={18} /> Restore sample data
             </button>
             <button type="button" className="flex min-h-11 w-full items-center gap-2 rounded-xl px-2 font-semibold" onClick={() => store.logout()}>
               <LogOut size={18} /> Log out

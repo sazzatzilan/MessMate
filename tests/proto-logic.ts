@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { billMember, createSeed, isServed, type AppState, type Meal } from "../src/mess/model";
+import { billMember, createSeed, isServed, transferManagerRole, type AppState, type Meal } from "../src/mess/model";
 
 const today = "2026-10-29";
 const seed = createSeed(new Date("2026-10-29T06:00:00.000Z"));
@@ -132,5 +132,23 @@ const afterLeave = billMember(left, "rafi", "2026-10", today);
 assert.equal(afterLeave.meals.LUNCH, 1, "the leave day is not billed");
 assert.equal(afterLeave.guestCount, 0, "a guest after the member leaves is not billed");
 assert.equal(afterLeave.deposited, 0, "a deposit before the join date is not counted");
+
+assert.deepEqual(seed.members.map((member) => member.username), ["sifat", "nahid", "nihal"]);
+assert.equal(seed.members[0]?.role, "MANAGER");
+assert.equal(seed.money.length, 0);
+assert.equal(seed.guests.length, 0);
+assert.equal(seed.offs.length, 0);
+
+const handed = transferManagerRole(seed.members, "sifat", "nahid");
+assert.equal(handed.ok, true);
+if (handed.ok) {
+  assert.equal(handed.members.find((member) => member.id === "sifat")?.role, "MEMBER");
+  assert.equal(handed.members.find((member) => member.id === "nahid")?.role, "MANAGER");
+  assert.equal(handed.members.find((member) => member.id === "nihal")?.role, "MEMBER");
+}
+assert.equal(transferManagerRole(seed.members, "nahid", "nihal").ok, false, "a member cannot hand over a role they do not have");
+assert.equal(transferManagerRole(seed.members, "sifat", "sifat").ok, false);
+const inactive = seed.members.map((member) => (member.id === "nahid" ? { ...member, active: false } : member));
+assert.equal(transferManagerRole(inactive, "sifat", "nahid").ok, false, "an inactive member cannot receive the role");
 
 console.log("proto logic ok");

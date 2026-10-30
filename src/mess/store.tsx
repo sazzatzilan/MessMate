@@ -9,8 +9,10 @@ import {
   type Member,
   MEALS,
   addDays,
+  BOOKS_VERSION,
   createSeed,
   dateKey,
+  transferManagerRole,
   eachDate,
   isClosed,
   isOn,
@@ -65,13 +67,13 @@ type Store = {
   setCutoff: (clock: string, meal?: Meal | null) => void;
   setPrice: (meal: Meal, member: number, guest: number) => void;
   saveMember: (input: MemberInput, id?: string) => Member | null;
+  transferRole: (targetId: string) => boolean;
   resetPassword: (id: string) => string;
   setActive: (id: string, active: boolean) => void;
   deleteMember: (id: string) => void;
   markRead: () => void;
   markBackup: (month: string) => void;
   runCleanup: (month: string, password: string, confirm: string) => string | null;
-  restore: () => void;
 };
 
 export type MealChange = { date: string; meal: Meal; on: boolean; prevOn: boolean };
@@ -103,10 +105,12 @@ export function ProtoProvider({ children }: { children: React.ReactNode }) {
       const saved = localStorage.getItem(KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as AppState;
-        if (parsed.members?.length) {
+        // An older save still has the demo members. Drop those books and keep only the theme.
+        if (parsed.booksVersion === BOOKS_VERSION && parsed.members?.length) {
           setState({
             ...createSeed(),
             ...parsed,
+            booksVersion: BOOKS_VERSION,
             intent: null,
             rateHistory: parsed.rateHistory ?? [],
             snapshots: parsed.snapshots ?? [],
@@ -116,9 +120,11 @@ export function ProtoProvider({ children }: { children: React.ReactNode }) {
           });
           return;
         }
+        setState({ ...createSeed(), theme: parsed.theme === "dark" ? "dark" : "light" });
+        return;
       }
     } catch {
-      /* use a fresh sample */
+      /* a broken save starts from the current books */
     }
     setState(createSeed());
   }, []);
@@ -725,6 +731,42 @@ export function ProtoProvider({ children }: { children: React.ReactNode }) {
         showToast("ok", `${created.name} added`);
         return created;
       },
+      // Stepping down and appointing the next manager happen together, so the last manager can hand the role over.
+      transferRole: (targetId) => {
+        if (!me) return false;
+        const result = transferManagerRole(state.members, me.id, targetId);
+        if (!result.ok) {
+          showToast("error", result.reason);
+          return false;
+        }
+        const target = state.members.find((member) => member.id === targetId);
+        const at = new Date().toISOString();
+        setState({
+          ...state,
+          members: result.members,
+          history: pushHistory(state, {
+            id: uid("h"),
+            at,
+            actorId: me.id,
+            category: "edit",
+            text: `${me.name} transferred the manager role to ${target?.name ?? "a member"}.`,
+          }),
+          notices: [
+            {
+              id: uid("n"),
+              for: targetId,
+              title: "You are the manager",
+              body: `${me.name} transferred the manager role to you.`,
+              href: "/manage",
+              unread: true,
+              at,
+            },
+            ...state.notices,
+          ],
+        });
+        showToast("ok", `${target?.name ?? "They"} is now the manager.`);
+        return true;
+      },
       resetPassword: (id) => {
         const password = `Reset${Math.floor(1000 + Math.random() * 9000)}!`;
         setState({ ...state, members: state.members.map((member) => (member.id === id ? { ...member, password } : member)) });
@@ -824,13 +866,6 @@ export function ProtoProvider({ children }: { children: React.ReactNode }) {
           }),
         });
         return null;
-      },
-      restore: () => {
-        const fresh = createSeed();
-        fresh.userId = state.userId;
-        fresh.theme = state.theme;
-        setState(fresh);
-        showToast("ok", "Sample data restored");
       },
     };
   }, [online, state, today, toast]);

@@ -57,14 +57,15 @@ export default function LoginPage() {
         <p className="text-sm text-muted">Forgot password? Ask your manager.</p>
       </form>
       <div className="mt-4 rounded-2xl border border-line bg-card p-4">
-        <p className="text-sm font-semibold">Preview accounts</p>
+        <p className="text-sm font-semibold">Accounts</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {[
-            ["nabil", "Nabil123!"],
-            ["rafi", "Rafi123!"],
-          ].map(([name, pass]) => (
+            ["sifat", "Shifat@101", "manager"],
+            ["nahid", "Nahid123!", "member"],
+            ["nihal", "Nihal123!", "member"],
+          ].map(([name, pass, role]) => (
             <button key={name} type="button" className="min-h-11 rounded-2xl bg-soft px-3 text-sm font-semibold text-brand" onClick={() => { setUsername(name); setPassword(pass); setError(""); }}>
-              {name} · {name === "nabil" ? "manager" : "member"}
+              {name} · {role}
             </button>
           ))}
         </div>
