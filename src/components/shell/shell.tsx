@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { useProto } from "@/mess/store";
-import { monthLabel, shiftMonth } from "@/mess/model";
+import { monthLabel, shiftMonth, shortMonth } from "@/mess/model";
 import { Avatar } from "@/components/ui/kit";
 
 const ITEMS = [
@@ -113,21 +113,24 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-line bg-bg/90 px-4 backdrop-blur">
+        <header className="sticky top-0 z-20 flex h-16 min-w-0 items-center gap-1 border-b border-line bg-bg/90 px-3 backdrop-blur sm:gap-2 sm:px-4">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">MessMate</p>
             <p className="truncate text-xs text-muted">Green Hostel</p>
           </div>
-          <div className="ml-auto flex items-center gap-1">
-            <button type="button" aria-label="Previous month" className="grid h-11 w-11 place-items-center rounded-2xl" onClick={() => store.setMonth(shiftMonth(store.state.month, -1))}>
+          <div className="ml-auto flex min-w-0 items-center">
+            <button type="button" aria-label="Previous month" className="grid h-11 w-10 shrink-0 place-items-center rounded-2xl sm:w-11" onClick={() => store.setMonth(shiftMonth(store.state.month, -1))}>
               <ChevronLeft size={18} />
             </button>
-            <span className="min-w-28 text-center text-sm font-semibold">{monthLabel(store.state.month)}</span>
+            <span className="w-20 truncate text-center text-xs font-semibold sm:w-28 sm:text-sm">
+              <span className="sm:hidden">{shortMonth(store.state.month)}</span>
+              <span className="hidden sm:inline">{monthLabel(store.state.month)}</span>
+            </span>
             <button
               type="button"
               aria-label="Next month"
               disabled={store.state.month >= currentMonth}
-              className="grid h-11 w-11 place-items-center rounded-2xl disabled:opacity-40"
+              className="grid h-11 w-10 shrink-0 place-items-center rounded-2xl disabled:opacity-40 sm:w-11"
               onClick={() => store.setMonth(shiftMonth(store.state.month, 1))}
             >
               <ChevronRight size={18} />
@@ -135,7 +138,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               aria-label={unread ? `${unread} unread notifications` : "Notifications"}
-              className="relative grid h-11 w-11 place-items-center rounded-2xl xl:hidden"
+              className="relative grid h-11 w-10 shrink-0 place-items-center rounded-2xl sm:w-11 xl:hidden"
               onClick={() => router.push("/notifications")}
             >
               <Bell size={20} />
@@ -162,7 +165,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 </div>
               ) : null}
             </div>
-            <button type="button" aria-label="Account menu" className="grid h-11 w-11 place-items-center" onClick={() => setMenu((open) => !open)}>
+            <button type="button" aria-label="Account menu" className="grid h-11 w-10 shrink-0 place-items-center sm:w-11" onClick={() => setMenu((open) => !open)}>
               <Avatar member={me} size={36} />
             </button>
           </div>
@@ -193,7 +196,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </p>
         ) : null}
 
-        <main className="mx-auto w-full max-w-6xl px-4 py-4 pb-28 md:pb-8">{children}</main>
+        <main className="mx-auto w-full min-w-0 max-w-6xl px-3 py-4 pb-36 sm:px-4 md:pb-8">{children}</main>
 
         {store.toast ? (
           <div role="status" className={`fixed bottom-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-[var(--shadow)] md:bottom-6 ${store.toast.kind === "ok" ? "bg-emerald-700 text-white" : "bg-red-700 text-white"}`}>
@@ -203,17 +206,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
         ) : null}
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-card md:hidden" aria-label="Main">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card pb-[env(safe-area-inset-bottom,0px)] md:hidden" aria-label="Main">
+        <div className="grid h-16 grid-cols-5">
         {nav.map((item) => {
           const active = item.href === "/" ? path === "/" : path.startsWith(item.href);
           const Icon = item.icon;
           return (
-            <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${active ? "text-brand" : "text-muted"}`}>
+            <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`flex min-w-0 flex-col items-center justify-center gap-0.5 px-0.5 text-[11px] font-semibold ${active ? "text-brand" : "text-muted"}`}>
               <Icon size={20} aria-hidden />
-              {item.label}
+              <span className="w-full truncate text-center">{item.label}</span>
             </Link>
           );
         })}
+        </div>
       </nav>
     </div>
   );

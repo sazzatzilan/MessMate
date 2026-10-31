@@ -79,7 +79,7 @@ export default function MealsPage() {
   const changes: MealChange[] = Object.entries(draft)
     .filter(([key, on]) => {
       const [date, meal] = key.split(":") as [string, Meal];
-      return date.slice(0, 7) === store.state.month && on !== savedOn(date, meal);
+      return on !== savedOn(date, meal);
     })
     .map(([key, on]) => {
       const [date, meal] = key.split(":") as [string, Meal];
@@ -97,8 +97,8 @@ export default function MealsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
+    <div className={`min-w-0 space-y-4 ${openChanges.length + lockedChanges.length > 0 ? "pb-28" : ""}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Meals</h1>
         <div className="flex rounded-2xl bg-soft p-1">
           {(["meals", "guests"] as const).map((item) => (
@@ -111,8 +111,8 @@ export default function MealsPage() {
 
       {tab === "guests" ? <GuestReport query={query} setQuery={setQuery} /> : (
         <div className="grid gap-4 xl:grid-cols-[18rem_1fr]">
-          <section className="rounded-2xl border border-line bg-card p-3 shadow-[var(--shadow)]">
-            <div className="flex gap-2 overflow-auto xl:hidden">
+          <section className="min-w-0 rounded-2xl border border-line bg-card p-2 shadow-[var(--shadow)] sm:p-3">
+            <div className="grid grid-cols-7 gap-1 xl:hidden">
               {week.map((date) => (
                 <DayButton key={date} date={date} selected={date === selected} dots={dot(date)} onSelect={setSelected} />
               ))}
@@ -138,7 +138,7 @@ export default function MealsPage() {
               const guests = store.state.guests.filter((guest) => guest.hostId === member.id && guest.date === selected && guest.meal === meal);
               const kind: ChipKind = request ? "pending" : lock === "unserved" ? "unserved" : on ? "on" : "off";
               return (
-                <article key={meal} className="rounded-2xl border border-line bg-card p-4 shadow-[var(--shadow)]">
+                <article key={meal} className="min-w-0 rounded-2xl border border-line bg-card p-3 shadow-[var(--shadow)] sm:p-4">
                   <div className="flex items-center gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -146,7 +146,8 @@ export default function MealsPage() {
                         <StatusChip kind={kind} />
                         {lock === "locked" || lock === "past" ? <StatusChip kind="locked" label={lock === "past" ? "Closed" : "Locked"} /> : null}
                       </div>
-                      <p className="text-sm text-muted">{MEAL_TIME[meal]} · {taka(rateFor(store.state, meal, selected).member)} · guest {taka(rateFor(store.state, meal, selected).guest)} · cut-off {cutoffFor(store.state, meal)}</p>
+                      <p className="text-sm text-muted">{MEAL_TIME[meal]} · {taka(rateFor(store.state, meal, selected).member)} · guest {taka(rateFor(store.state, meal, selected).guest)}</p>
+                      <p className="text-sm text-muted">Cut-off {cutoffFor(store.state, meal)}</p>
                     </div>
                     <Toggle
                       on={on}
@@ -181,7 +182,7 @@ export default function MealsPage() {
 
       <ActionBar
         count={openChanges.length + lockedChanges.length}
-        label={lockedChanges.length && !managerOverride ? "Request change" : `Save changes (${openChanges.length + lockedChanges.length})`}
+        label={lockedChanges.length && !managerOverride ? "Request change" : "Save"}
         onDiscard={() => setDraft({})}
         onPrimary={() => {
           if (lockedChanges.length && !managerOverride) setRequestOpen(true);
@@ -242,10 +243,10 @@ function DayButton({ date, selected, dots, onSelect }: { date: string; selected:
   const day = parseKey(date);
   const names = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
   return (
-    <button type="button" onClick={() => onSelect(date)} aria-pressed={selected} aria-label={prettyDate(date)} className={`flex min-h-16 min-w-14 flex-col items-center justify-center rounded-2xl text-sm ${selected ? "bg-[#0F766E] text-white" : "bg-bg"}`}>
-      <span className={`text-[11px] ${selected ? "text-white/80" : "text-muted"}`}>{names[day.getDay()]}</span>
+    <button type="button" onClick={() => onSelect(date)} aria-pressed={selected} aria-label={prettyDate(date)} className={`flex min-h-14 w-full min-w-0 flex-col items-center justify-center rounded-xl px-0.5 text-sm ${selected ? "bg-[#0F766E] text-white" : "bg-bg"}`}>
+      <span className={`text-[10px] ${selected ? "text-white/80" : "text-muted"}`}>{names[day.getDay()]}</span>
       <span className="font-semibold">{day.getDate()}</span>
-      <span className="mt-1 flex gap-1" aria-hidden>
+      <span className="mt-1 flex gap-0.5" aria-hidden>
         {dots.map((color, index) => <span key={index} className={`h-1.5 w-1.5 rounded-full ${selected ? "bg-white" : color}`} />)}
       </span>
     </button>

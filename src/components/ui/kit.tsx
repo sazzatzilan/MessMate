@@ -239,11 +239,11 @@ export function ActionBar({
 }) {
   if (count <= 0) return null;
   return (
-    <div className="fixed inset-x-0 bottom-16 z-30 border-t border-line bg-card/95 px-4 py-3 backdrop-blur md:bottom-0 md:left-[var(--side,4.5rem)] xl:left-64">
-      <div className="mx-auto flex max-w-6xl items-center gap-2">
-        <span className="mr-auto text-sm font-semibold">{count} unsaved</span>
-        <Button kind="ghost" onClick={onDiscard}>Discard</Button>
-        <Button onClick={onPrimary}>{label}</Button>
+    <div className="fixed inset-x-0 z-40 border-t border-line bg-card px-3 py-3 shadow-[var(--shadow)] bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] md:bottom-0 md:left-[var(--side,4.5rem)] xl:left-64">
+      <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-2">
+        <p className="col-span-2 text-sm font-semibold">{count} unsaved</p>
+        <Button kind="ghost" className="w-full" onClick={onDiscard}>Discard</Button>
+        <Button className="w-full" onClick={onPrimary}>{label}</Button>
       </div>
     </div>
   );

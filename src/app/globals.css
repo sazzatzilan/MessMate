@@ -42,7 +42,8 @@
 
 * { box-sizing: border-box; }
 
-html, body { min-height: 100%; }
+html, body { min-height: 100%; max-width: 100%; }
+html { overflow-x: clip; }
 
 body {
   margin: 0;
